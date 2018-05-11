@@ -1,12 +1,12 @@
 # node-crawler
 Nodejs web crawler functional for a single domain call
 
-#Usage
+##Usage
 ```javascript
 node index.js
 ```
 
-#Configure
+##Configure
 ### Url configuration
 ```javascript
 // change this url to your desired url inside index.js
@@ -22,7 +22,7 @@ this.limitCrawling = 10;
 ```
 
 
-#What can be improved:
+###What can be improved:
 * database to store previous sessions and to keep track when was the last time a page was crawled
 * hash tables for efficient indexing
 * publisher/subscriber with a queue to distribute workload to multiple servers
