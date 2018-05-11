@@ -3,6 +3,7 @@ Nodejs web crawler functional for a single domain call
 
 ## Usage
 ```javascript
+npm install
 node index.js
 ```
 
@@ -23,6 +24,7 @@ this.limitCrawling = 10;
 
 
 # What can be improved:
+* REST API
 * database to store previous sessions and to keep track when was the last time a page was crawled
 * hash tables for efficient indexing
 * publisher/subscriber with a queue to distribute workload to multiple servers
