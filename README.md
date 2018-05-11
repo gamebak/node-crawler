@@ -1,13 +1,13 @@
 # node-crawler
 Nodejs web crawler functional for a single domain call
 
-##Usage
+###Usage
 ```javascript
 node index.js
 ```
 
-##Configure
-### Url configuration
+###Configure
+Url configuration
 ```javascript
 // change this url to your desired url inside index.js
 let url = 'http://wiprodigital.com/';
