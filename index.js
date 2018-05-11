@@ -3,17 +3,18 @@ const axios = require('axios');
 
 class Crawl 
 {
-  constructor() 
+  constructor(url) 
   {
+    this.url = url;
     // indexed links    
-    this.internalUrl = []; // (url) - same index for visited
+    this.internalUrl = [];
     this.externalUrl = [];
     // boolean - index represents internalUrl to keep track of what was visited
     this.visitedUrls = []; // visited [i] = internalUrl[i]
 
     this.images = [];
     this.hostname = '';
-    this.limitParsing = 5;
+    this.limitCrawling = 10;
   }
 
   /** 
@@ -63,7 +64,7 @@ class Crawl
   */
   getImages(data)
   {
-    let regexImg = /(http[s]?:\/\/.*\.(?:png|jpg|gif|svg|jpeg))/gi;
+    let regexImg =  /([a-z\-_0-9\/\:\.]*\.(jpg|jpeg|png|gif))/gi;
     let match = data.match(regexImg);
 
     return match;
@@ -155,6 +156,28 @@ class Crawl
 
   }
 
+  /** Filter for special links, prevent http://example.com/abc#1234 to be seen as internal
+   * @param string strLink
+   * @return string
+  */
+  getFilteredLink(strLink) 
+  {
+    let regexHref = /(.*?)#/
+    let match = strLink.match(regexHref)
+    if(match) 
+    {
+      // filter last character / for links that contain ids
+      let lastCharacter = match[1].length-1;
+      if(match[1][lastCharacter] == '/') 
+      {
+        match[1] = match[1].substr(0,lastCharacter);
+      }
+      return match[1]; 
+    }
+
+    return strLink;
+  }
+
   /** 
    * Get an output with matched links inside page content
    * @param string data     raw html data
@@ -174,16 +197,18 @@ class Crawl
     for(i = 0; i<matchesLinks.length;i++) 
     {
       let matchedUrl = matchesLinks[i].match(regexUrl);
-      if(matchedUrl[1] !== undefined && matchedUrl[1][0] != '#' && this.isNewLink(matchedUrl[1]) )
+      let currentUrl = this.getFilteredLink(matchedUrl[1]);
+
+      if(currentUrl !== undefined && currentUrl[0] != '#' && this.isNewLink(currentUrl) )
       {
         // internal
-        if(this.getLinkClasification(matchedUrl[1]))
+        if(this.getLinkClasification(currentUrl))
         {
-          this.internalUrl.push(matchedUrl[1]);
+          this.internalUrl.push(currentUrl);
         }
         else
         {
-          this.externalUrl.push(matchedUrl[1]);
+          this.externalUrl.push(currentUrl);
         }
       }
     }
@@ -235,39 +260,66 @@ class Crawl
     this.hostname = hostname;
   }
 
+  /** Output fetched data only */
   getData()
   {
+    console.log('discovered internal links');
     console.log(this.internalUrl);
     console.log('------');
+
+    console.log('discovered external links');
     console.log(this.externalUrl);
     console.log('------');
+    
+    console.log('discovered images');
     console.log(this.images);
   }
 
+  /** Find the next link to parse
+   * @return string
+  */
+  getNextVisitingLink()
+  {
+    return this.internalUrl[this.visitedUrls.length];
+  }
+
+  /** 
+   * Increments visited array with a value
+   * */
+  setVisitedIncrement()
+  {
+    this.visitedUrls.push(true);
+  }
+
+
+  /**
+   * Main crawler loop, starts from one point and maps a specific website
+  */
   main()
   {
-    let url = 'http://wiprodigital.com/';
-    this.getInnerLinks(url).then((result) => {
-      // console.log(result);
-      this.getData();      
-      console.log('parsing finished');
+    this.getInnerLinks(this.url).then((result) => {
+      
+      const loop = async value => {
+        let i = 0;
+        let minValue = Math.min(this.limitCrawling,this.internalUrl.length);
+
+        while (i < minValue) 
+        {
+          let url = this.getNextVisitingLink();
+          let result = await this.getInnerLinks(url);
+          console.log('visiting internal url:'+url);
+          this.setVisitedIncrement();
+          i++;
+        }
+      }
+
+      // display what was discovered in the console after the loop finishes
+      loop(0).then(() => this.getData());
     });
   }
 }
 
-// initialise crawler
-var crawl = new Crawl();
-var app = express();
-
+// change this url to what you desire
 let url = 'http://wiprodigital.com/';
+var crawl = new Crawl(url);
 crawl.main();
-
-// app.get('/', function (req, res) {  
-//   crawl.getInnerLinks().then((result) => {
-//     // console.log(result);
-//   });
-//   res.send('crawling your page');
-  
-// });
-
-app.listen(3000);
