@@ -3,6 +3,7 @@ Nodejs web crawler functional for a single domain call
 
 ## Usage
 ```javascript
+git clone git@github.com:gamebak/node-crawler.git
 npm install
 node index.js
 ```
